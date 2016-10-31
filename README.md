@@ -99,10 +99,11 @@ localStorage缓存检测。插件默认不缓存请求，可以通过配置该�
 获取数据的等待提示。用于给所有请求添加等待提示。参见上文**使用**中的例子<br>
 
 ## 默认行为
-* 所有response，默认转成json
+* 所有response优先转成json格式
 * 如果**600**毫秒内没有返回数据才会调用loading.show()
 * 'Content-Type': 'application/x-www-form-urlencoded'
 * 'Cache-Control': 'no-cache'
+* jsonp请求的回调参数名为'callback'
 
 ## 请求方法
 * get (url, [option])

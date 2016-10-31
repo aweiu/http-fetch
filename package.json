@@ -1,0 +1,20 @@
+{
+  "name": "http-fetch",
+  "version": "0.0.0",
+  "description": "使用fetch代替ajax请求",
+  "keywords": [
+    "fetch",
+    "ajax",
+    "http",
+    "request"
+  ],
+  "author": {
+    "name": "余阿伟"
+  },
+  "main": "http-fetch.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aweiu/http-fetch.git"
+  },
+  "license": "ISC"
+}
