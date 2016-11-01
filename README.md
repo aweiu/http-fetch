@@ -54,11 +54,29 @@ httpFetch.loading = {
 }
 ```
 ### beforeResolve
-请求Promise resolve之前的hook。一般用于拦截请求<br>
+请求Promise resolve之前的hook。一般用于拦截请求／修改返回参数／**返回自定义异常**<br>
 ```
+// 拦截请求
 httpFetch.beforeResolve = (result, next) => {
   if (result.response.err_msg === 'need login') window.location.href = '/login'
   else next()
+}
+// 修改返回参数
+httpFetch.beforeResolve = (result, next) => {
+  // 将请求结果由response修改为response.data
+  next(result.response.data)
+}
+// 返回自定义异常
+// 请认真看下面错误对象的定义过程
+// 抛出的异常会正常走全局onError ＝> 局部catch的流程
+httpFetch.beforeResolve = (result, next) => {
+  var rs = result.response
+  if (rs.hasOwnProperty('err_msg')) {
+    var error = Error(rs.err_msg)
+    // httpFetch仅会处理type = 'httpFetchError'的错误，否则抛出
+    error.type = 'httpFetchError'
+    throw error
+  } else next()
 }
 ```
 **Result**对象
