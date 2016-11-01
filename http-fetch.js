@@ -5,7 +5,6 @@
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-
 var fetch = require('./fetch');
 
 var jsonp = require('./jsonp');
@@ -20,8 +19,7 @@ function tryToJson(data) {
 function checkOption(options, key) {
   return !options.hasOwnProperty(key) || options[key];
 }
-function onResponse(response, method, url, body, resolve, options, loadingTimer) {
-  if (loadingTimer !== undefined) hideLoading(loadingTimer);
+function onResponse(response, method, url, body, resolve, options) {
   var result = {
     url: url,
     body: body,
@@ -46,13 +44,18 @@ function request(method, url, body, resolve, reject) {
     loading: true
   };
 
-  var responseArgs = [typeof httpFetch.cache === 'function' ? window.localStorage.getItem(url) : false, method, url, body, resolve, options, checkOption(options, 'loading') ? showLoading() : undefined];
+  if (checkOption(options, 'loading')) var loadingTimer = showLoading();
+  var responseArgs = [typeof httpFetch.cache === 'function' ? window.localStorage.getItem(url) : false, method, url, body, resolve, options];
   if (responseArgs[0]) return onResponse.apply(null, responseArgs);
   var requestMethod = fetch[method] || jsonp;
   requestMethod(url, body).then(function (rs) {
+    hideLoading(loadingTimer);
+    // 防止误关闭
+    loadingTimer = undefined;
     responseArgs[0] = rs;
     onResponse.apply(null, responseArgs);
   }).catch(function (e) {
+    hideLoading(loadingTimer);
     if (e.type !== 'httpFetchError') throw e;
     e.url = url;
     e.body = body;
@@ -72,7 +75,7 @@ function showLoading() {
   }
 }
 function hideLoading(timer) {
-  if (httpFetch.hasOwnProperty('loading') && typeof httpFetch.loading.hide === 'function') {
+  if (timer !== undefined && httpFetch.hasOwnProperty('loading') && typeof httpFetch.loading.hide === 'function') {
     clearTimeout(timer);
     httpFetch.loading.hide();
   }
