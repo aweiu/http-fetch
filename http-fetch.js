@@ -1,12 +1,15 @@
+/**
+ * Created by aweiu on 16/10/28.
+ */
 'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 
 var fetch = require('./fetch');
 
 var jsonp = require('./jsonp');
 
-/**
- * Created by aweiu on 16/10/28.
- */
 function tryToJson(data) {
   try {
     return JSON.parse(data);
@@ -31,7 +34,7 @@ function onResponse(response, method, url, body, resolve, options, loadingTimer)
 
     resolve(rs);
     if (typeof httpFetch.afterResolve === 'function' && checkOption(options, 'afterResolve')) httpFetch.afterResolve(result);
-    if (typeof httpFetch.cache === 'function' && httpFetch.cache(result)) window.localStorage.setItem(url, JSON.stringify(rs));
+    if (typeof httpFetch.cache === 'function' && httpFetch.cache(result)) window.localStorage.setItem(url, JSON.stringify(result));
   };
   if (typeof httpFetch.beforeResolve === 'function' && checkOption(options, 'beforeResolve')) httpFetch.beforeResolve(result, next);else next();
 }
@@ -112,5 +115,16 @@ try {
     }
   }
 }
-
+/**
+ * @param {Object} json
+ */
+httpFetch.jsonToUrlParams = function (json) {
+  var urlParams = '';
+  for (var param in json) {
+    if (!json.hasOwnProperty(param)) break;
+    var tmp = json[param];
+    urlParams += param + '=' + ((typeof tmp === 'undefined' ? 'undefined' : _typeof(tmp)) === 'object' ? JSON.stringify(tmp) : tmp) + '&';
+  }
+  return urlParams.substr(0, urlParams.length - 1);
+};
 module.exports = httpFetch;

@@ -151,3 +151,15 @@ localStorage缓存检测。插件默认不缓存请求，可以通过配置该�
   loading: true
 }
 ```
+## 其他方法
+### jsonToUrlParams (json)
+用于将json对象转成url参数
+```
+var json = {
+  name: '张三',
+  age: 18
+}
+console.log(httpFetch.jsonToUrlParams(json))
+// 返回：'name=张三&age=18'
+```
+

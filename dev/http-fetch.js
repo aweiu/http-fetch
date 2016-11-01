@@ -25,7 +25,7 @@ function onResponse (response, method, url, body, resolve, options, loadingTimer
   var next = (rs = result.response) => {
     resolve(rs)
     if (typeof httpFetch.afterResolve === 'function' && checkOption(options, 'afterResolve')) httpFetch.afterResolve(result)
-    if (typeof httpFetch.cache === 'function' && httpFetch.cache(result)) window.localStorage.setItem(url, JSON.stringify(rs))
+    if (typeof httpFetch.cache === 'function' && httpFetch.cache(result)) window.localStorage.setItem(url, JSON.stringify(result))
   }
   if (typeof httpFetch.beforeResolve === 'function' && checkOption(options, 'beforeResolve')) httpFetch.beforeResolve(result, next)
   else next()
@@ -90,5 +90,17 @@ for (let method of methods) {
       request(method, url, body, resolve, reject, options)
     })
   }
+}
+/**
+ * @param {Object} json
+ */
+httpFetch.jsonToUrlParams = function (json) {
+  var urlParams = ''
+  for (var param in json) {
+    if (!json.hasOwnProperty(param)) break
+    var tmp = json[param]
+    urlParams += `${param}=${typeof tmp === 'object' ? JSON.stringify(tmp) : tmp}&`
+  }
+  return urlParams.substr(0, urlParams.length - 1)
 }
 export default httpFetch
