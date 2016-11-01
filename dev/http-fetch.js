@@ -11,7 +11,7 @@ function tryToJson (data) {
   }
 }
 function checkOption (options, key) {
-  return !options.hasOwnProperty(key) || options.key
+  return !options.hasOwnProperty(key) || options[key]
 }
 function onResponse (response, method, url, body, resolve, options, loadingTimer) {
   if (loadingTimer !== undefined) hideLoading(loadingTimer)
