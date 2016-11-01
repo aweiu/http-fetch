@@ -15,7 +15,8 @@ var _loop = function _loop() {
       credentials: 'include',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Cache-Control': 'no-cache'
+        'Cache-Control': 'no-cache',
+        'X-Requested-With': 'XMLHttpRequest'
       }
     }).then(function (rs) {
       return rs.text().then(function (text) {

@@ -121,6 +121,7 @@ localStorage缓存检测。插件默认不缓存请求，可以通过配置该�
 * 如果**600**毫秒内没有返回数据才会调用loading.show()
 * 'Content-Type': 'application/x-www-form-urlencoded'
 * 'Cache-Control': 'no-cache'
+* 'X-Requested-With': 'XMLHttpRequest'
 * jsonp请求的回调参数名为'callback'
 
 ## 请求方法

@@ -10,7 +10,8 @@ for (let method of ['get', 'head', 'delete', 'post', 'put', 'patch']) {
       credentials: 'include',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Cache-Control': 'no-cache'
+        'Cache-Control': 'no-cache',
+        'X-Requested-With': 'XMLHttpRequest'
       }
     })
       .then(rs => {
