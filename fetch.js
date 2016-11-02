@@ -22,8 +22,11 @@ var _loop = function _loop() {
       return rs.text().then(function (text) {
         if (rs.ok) return text;
         var error = Error('httpFetchError:' + rs.statusText);
+        error.url = url;
+        error.body = body;
+        error.method = method;
         error.status = rs.status;
-        error.response = text;
+        error.data = text;
         error.type = 'httpFetchError';
         throw error;
       });

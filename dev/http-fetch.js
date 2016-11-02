@@ -13,60 +13,61 @@ function tryToJson (data) {
 function checkOption (options, key) {
   return !options.hasOwnProperty(key) || options[key]
 }
-function onResponse (response, method, url, body, resolve, options) {
-  var result = {
-    url: url,
-    body: body,
-    method: method,
-    options: options,
-    response: tryToJson(response)
-  }
-  var next = (rs = result.response) => {
+function onResponse (request, responseData, resolve) {
+  var response = request
+  response.data = tryToJson(responseData)
+  var next = (rs = response) => {
     resolve(rs)
-    if (typeof httpFetch.afterResolve === 'function' && checkOption(options, 'afterResolve')) httpFetch.afterResolve(result)
-    if (typeof httpFetch.cache === 'function' && httpFetch.cache(result)) window.localStorage.setItem(url, JSON.stringify(result))
+    if (typeof httpFetch.cache === 'function' && httpFetch.cache(response.data)) {
+      try {
+        window.localStorage.setItem(url, JSON.stringify(responseData))
+      } catch (e) {
+        console.warn('can not cache this responseData')
+        console.log(responseData)
+      }
+    }
   }
-  if (typeof httpFetch.beforeResolve === 'function' && checkOption(options, 'beforeResolve')) httpFetch.beforeResolve(result, next)
+  if (checkOption(request.options, 'hookResponse') && typeof httpFetch.onResponse === 'function') httpFetch.onResponse(response, next)
   else next()
 }
-function request (method, url, body, resolve, reject, options = {
-  errMode: 0,
-  beforeResolve: true,
-  afterResolve: true,
-  loading: true
-}) {
-  if (checkOption(options, 'loading')) var loadingTimer = showLoading()
-  var responseArgs = [
-    typeof httpFetch.cache === 'function' ? window.localStorage.getItem(url) : false,
-    method,
-    url,
-    body,
-    resolve,
-    options
-  ]
-  if (responseArgs[0]) return onResponse.apply(null, responseArgs)
-  const requestMethod = fetch[method] || jsonp
-  requestMethod(url, body)
-    .then(rs => {
-      hideLoading(loadingTimer)
-      // 防止误关闭
-      loadingTimer = undefined
-      responseArgs[0] = rs
-      onResponse.apply(null, responseArgs)
-    })
-    .catch(e => {
-      hideLoading(loadingTimer)
-      if (e.type !== 'httpFetchError') throw e
-      e.url = url
-      e.body = body
-      e.method = method
-      e.response = tryToJson(e.response)
-      if (options.errMode === 1 || options.errMode === 2) reject(e)
-      if (options.errMode !== 1) {
-        if (typeof httpFetch.onError === 'function') httpFetch.onError(e)
-        else throw e
-      }
-    })
+function request (request, resolve, reject) {
+  request.options = request.options || {
+      errMode: 0,
+      hookRequest: true,
+      hookResponse: true,
+      loading: true
+    }
+  var next = (resolveData) => {
+    if (resolveData !== undefined) return resolve(resolveData)
+    if (checkOption(request.options, 'loading')) var loadingTimer = showLoading()
+    var responseArgs = [
+      request,
+      typeof httpFetch.cache === 'function' ? window.localStorage.getItem(request.url) : false,
+      resolve
+    ]
+    if (responseArgs[1]) return onResponse.apply(null, responseArgs)
+    const requestMethod = fetch[request.method] || jsonp
+    requestMethod(request.url, request.body)
+      .then(data => {
+        hideLoading(loadingTimer)
+        // 防止误关闭
+        loadingTimer = undefined
+        responseArgs[1] = data
+        onResponse.apply(null, responseArgs)
+      })
+      .catch(e => {
+        hideLoading(loadingTimer)
+        if (e.type !== 'httpFetchError') throw e
+        e.data = tryToJson(e.data)
+        if (request.options.errMode === 1 || request.options.errMode === 2) reject(e)
+        if (request.options.errMode !== 1) {
+          if (typeof httpFetch.onError === 'function') httpFetch.onError(e)
+          else throw e
+        }
+      })
+  }
+  if (checkOption(request.options, 'hookRequest') && typeof httpFetch.onRequest === 'function') httpFetch.onRequest(request, next)
+  else next()
 }
 function showLoading () {
   if (httpFetch.hasOwnProperty('loading') && typeof httpFetch.loading.show === 'function') {
@@ -90,7 +91,12 @@ for (let method of methods) {
       body = null
     }
     return new Promise((resolve, reject) => {
-      request(method, url, body, resolve, reject, options)
+      request({
+        url: url,
+        body: body,
+        method: method,
+        options: options
+      }, resolve, reject)
     })
   }
 }

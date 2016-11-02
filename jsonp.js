@@ -15,6 +15,8 @@ module.exports = function (url) {
     script.src = url + (url.indexOf('?') === -1 ? '?' : '&') + 'callback=' + callback;
     script.onerror = function () {
       var error = Error('httpFetchError: Failed to fetch jsonp');
+      error.url = url;
+      error.method = 'jsonp';
       error.status = 'unknown';
       error.type = 'httpFetchError';
       reject(error);

@@ -8,27 +8,105 @@ npm install http-fetch
 ## 使用
 ```
 import httpFetch from 'http-fetch'
-// 以下配置非必须，按你的需求来
-// 全局错误处理
-httpFetch.onError =  e => {
-  // 看看Error对象里都有些啥
-  console.dir(e)
+// 发起一个get请求
+httpFetch.get('/users')
+  .then(response => console.log(response))
+```
+## 配置
+### onError
+全局错误处理。
+```
+httpFetch.onError = error => console.dir(error)
+```
+**Error**对象
+```
+{
+  url: '请求地址',
+  body: '请求参数',
+  method: '请求方法',
+  status: 'http返回码',
+  data: '请求结果',
+  type: 'httpFetchError'
 }
-// 请求Promise resolve之前的hook
-httpFetch.beforeResolve = (result, next) => {
-  // result：包含了本次请求的基本信息和请求结果
-  // next([resolveObject])：继续执行resolve，你可以传你的自定义对象来覆盖本次请求结果
+```
+### onRequest
+请求提交的拦截器。一般用于修改提交参数／终止请求
+```
+// 修改提交参数
+httpFetch.onRequest = (request, next) {
+  request.body = '...'
+  next()
 }
-// 请求Promise resolve之后的hook
-httpFetch.afterResolve = result => {
-  // result：包含了本次请求的基本信息和请求结果
+// 终止请求
+httpFetch.onRequest = (request, next) {
+  // 传入任意非undefined参数表示终止请求并立即resolve你传入的参数
+  next('不给你请求！')
 }
-// 配置localStorage缓存检测
-httpFetch.cache = result => {
-  // result：包含了本次请求的基本信息和请求结果
+```
+Request对象：
+```
+{
+  url: '请求地址',
+  body: '请求参数',
+  method: '请求方法',
+  options: '请求配置'
+}
+```
+### onResponse
+请求返回的拦截器。一般用于修改返回参数／**返回自定义异常**<br>
+```
+// 修改返回参数
+httpFetch.onResponse = (response, next) => {
+  response.data = '...'
+  next()
+}
+// 返回自定义异常
+// 请认真看下面错误对象的定义过程
+// 抛出的异常会正常走全局onError ＝> 局部catch的流程
+httpFetch.onResponse = (response, next) => {
+  var data = response.data
+  if (data.hasOwnProperty('err_msg')) {
+    var error = Error(data.err_msg)
+    // httpFetch仅会处理type = 'httpFetchError'的错误，否则抛出
+    error.type = 'httpFetchError'
+    throw error
+  } else next()
+}
+```
+**response**对象
+```
+{
+  url: '请求地址',
+  body: '请求参数',
+  method: '请求方法',
+  options: '请求配置',
+  data: '请求结果'
+}
+```
+**next([resolveData])**方法<br>
+你可以传入一个参数来代替本次的Response
+```
+httpFetch.onResponse = (response, next) => {
+  if (response.url === '/hello') next({msg: 'hello'})
+  else next()
+}
+httpFetch.get('/hello')
+  .then(response => {
+    // response: {msg: 'hello'}
+  })
+```
+### cache
+localStorage缓存检测。插件默认不缓存请求，可以通过配置该选项来实现将结果**永久**缓存至localStorage中<br>
+一般用于缓存某些不轻易变更的信息，比如全国省市区信息。
+```
+httpFetch.cache = response => {
   // 如果请求结果中cache属性为true，则缓存本次结果
-  return result.response.cache === true
+  return response.data.cache === true
 }
+```
+### loading
+获取数据的等待提示。用于给所有请求添加等待提示。
+```
 // 配置获取数据的等待提示
 httpFetch.loading = {
   show () {
@@ -39,85 +117,8 @@ httpFetch.loading = {
   }
 }
 ```
-## 配置
-### onError
-全局错误处理。参见上文**使用**中的例子<br>
-**Error**对象
-```
-{
-  url: '请求地址',
-  body: '请求参数',
-  method: '请求方法',
-  status: 'http返回码',
-  response: '请求结果',
-  type: 'httpFetchError'
-}
-```
-### beforeResolve
-请求Promise resolve之前的hook。一般用于拦截请求／修改返回参数／**返回自定义异常**<br>
-```
-// 拦截请求
-httpFetch.beforeResolve = (result, next) => {
-  if (result.response.err_msg === 'need login') window.location.href = '/login'
-  else next()
-}
-// 修改返回参数
-httpFetch.beforeResolve = (result, next) => {
-  // 将请求结果由response修改为response.data
-  next(result.response.data)
-}
-// 返回自定义异常
-// 请认真看下面错误对象的定义过程
-// 抛出的异常会正常走全局onError ＝> 局部catch的流程
-httpFetch.beforeResolve = (result, next) => {
-  var rs = result.response
-  if (rs.hasOwnProperty('err_msg')) {
-    var error = Error(rs.err_msg)
-    // httpFetch仅会处理type = 'httpFetchError'的错误，否则抛出
-    error.type = 'httpFetchError'
-    throw error
-  } else next()
-}
-```
-**Result**对象
-```
-{
-  url: '请求地址',
-  body: '请求参数',
-  method: '请求方法',
-  options: '请求配置',
-  response: '请求结果'
-}
-```
-**next([resolveObject])**方法<br>
-你可以传入一个参数来代替本次的请求结果去resolve本次请求的promise
-```
-httpFetch.beforeResolve = (result, next) => {
-  if (result.url === '/hello') next({msg: 'hello'})
-  else next()
-}
-httpFetch.get('/hello')
-  .then(rs => {
-    // rs: {msg: 'hello'}
-  })
-```
-### afterResolve
-请求Promise resolve之后的hook。一般用于全局提示返回结果
-```
-httpFetch.afterResolve = result => {
-  // 每次请求成功默认alert返回结果中的msg值
-  window.alert(result.response.msg)
-}
-```
-### cache
-localStorage缓存检测。插件默认不缓存请求，可以通过配置该选项来实现将结果**永久**缓存至localStorage中<br>
-一般用于缓存某些不轻易变更的信息，比如全国省市区信息。参见上文**使用**中的例子
-
-### loading
-获取数据的等待提示。用于给所有请求添加等待提示。参见上文**使用**中的例子<br>
-
 ## 默认行为
-* 所有response优先转成json格式
+* 所有Response.data||Error.data优先转成json格式
 * 如果**600**毫秒内没有返回数据才会调用loading.show()
 * 'Content-Type': 'application/x-www-form-urlencoded'
 * 'Cache-Control': 'no-cache'
@@ -144,10 +145,10 @@ localStorage缓存检测。插件默认不缓存请求，可以通过配置该�
 {
   // 错误处理模式 0：交给全局onError处理 1：本次请求自行catch处理 2：全局onError＋自行catch处理 默认：0
   errMode: 0,
-  // 是否使用全局beforeResolve 默认：true
-  beforeResolve: true,
-  // 是否使用全局afterResolve 默认：true
-  afterResolve: true,
+  // 是否走全局request拦截器 默认：true
+  hookRequest: true,
+  // 是否走全局response拦截器 默认：true
+  hookResponse: true,
   // 本次请求是否显示等待提示 默认：true
   loading: true
 }
