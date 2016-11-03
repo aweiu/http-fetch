@@ -1,6 +1,6 @@
 {
   "name": "http-fetch",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "使用fetch代替ajax请求",
   "keywords": [
     "fetch",

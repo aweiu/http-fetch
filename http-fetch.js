@@ -5,10 +5,36 @@
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var fetch = require('./fetch');
+var _fetch = require('./fetch');
 
 var jsonp = require('./jsonp');
 
+var resource = {
+  cache: {},
+  getCacheOption: function getCacheOption(options) {
+    return options.hasOwnProperty('cache') ? options.cache : httpFetch.cache;
+  },
+  fetch: function fetch(request) {
+    return (_fetch[request.method] || jsonp)(request.url, request.body);
+  },
+  setCache: function setCache(request, requestStr) {
+    var promise = this.fetch(request);
+    this.cache[requestStr] = [promise, new Date()];
+    return promise;
+  },
+  getCache: function getCache(requestStr, cacheOption) {
+    var cache = this.cache[requestStr];
+    if (cache && (cacheOption === true || new Date() - cache[1] < cacheOption)) return cache[0];
+  },
+  get: function get(request) {
+    var requestStr = JSON.stringify(request);
+    var cacheOption = this.getCacheOption(request.options);
+    if (cacheOption) {
+      var cacheResource = this.getCache(requestStr, cacheOption);
+      return cacheResource ? cacheResource : this.setCache(request, requestStr);
+    } else return this.fetch(request);
+  }
+};
 function tryToJson(data) {
   try {
     return JSON.parse(data);
@@ -26,36 +52,18 @@ function onResponse(request, responseData, resolve) {
     var rs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : response;
 
     resolve(rs);
-    if (typeof httpFetch.cache === 'function' && httpFetch.cache(response.data)) {
-      try {
-        window.localStorage.setItem(url, JSON.stringify(responseData));
-      } catch (e) {
-        console.warn('can not cache this responseData');
-        console.log(responseData);
-      }
-    }
   };
   if (checkOption(request.options, 'hookResponse') && typeof httpFetch.onResponse === 'function') httpFetch.onResponse(response, next);else next();
 }
 function request(request, resolve, reject) {
-  request.options = request.options || {
-    errMode: 0,
-    hookRequest: true,
-    hookResponse: true,
-    loading: true
-  };
   var next = function next(resolveData) {
     if (resolveData !== undefined) return resolve(resolveData);
     if (checkOption(request.options, 'loading')) var loadingTimer = showLoading();
-    var responseArgs = [request, typeof httpFetch.cache === 'function' ? window.localStorage.getItem(request.url) : false, resolve];
-    if (responseArgs[1]) return onResponse.apply(null, responseArgs);
-    var requestMethod = fetch[request.method] || jsonp;
-    requestMethod(request.url, request.body).then(function (data) {
+    resource.get(request).then(function (data) {
       hideLoading(loadingTimer);
       // 防止误关闭
       loadingTimer = undefined;
-      responseArgs[1] = data;
-      onResponse.apply(null, responseArgs);
+      onResponse(request, data, resolve);
     }).catch(function (e) {
       hideLoading(loadingTimer);
       if (e.type !== 'httpFetchError') throw e;
@@ -101,7 +109,7 @@ try {
           url: url,
           body: body,
           method: method,
-          options: options
+          options: options || {}
         }, resolve, reject);
       });
     };

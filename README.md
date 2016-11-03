@@ -96,13 +96,12 @@ httpFetch.get('/hello')
   })
 ```
 ### cache
-localStorage缓存检测。插件默认不缓存请求，可以通过配置该选项来实现将结果**永久**缓存至localStorage中<br>
-一般用于缓存某些不轻易变更的信息，比如全国省市区信息。
+应用层缓存。默认false
 ```
-httpFetch.cache = response => {
-  // 如果请求结果中cache属性为true，则缓存本次结果
-  return response.data.cache === true
-}
+// 同一个请求会从缓存中取，除非刷新了页面。
+httpFetch.cache = true
+// 你也可以设置一个超时时间（单位：毫秒），过期则重新获取
+httpFetch.cache = 3600000
 ```
 ### loading
 获取数据的等待提示。用于给所有请求添加等待提示。
@@ -150,8 +149,21 @@ httpFetch.loading = {
   // 是否走全局response拦截器 默认：true
   hookResponse: true,
   // 本次请求是否显示等待提示 默认：true
-  loading: true
+  loading: true,
+  // 本次请求的缓存配置 默认：全局cache配置
+  cache: true
 }
+```
+*cache的检测机制是通过request对象特征来决定是否复用*
+```
+// 缓存users接口的get请求
+httpFetch.post('/users', 'name=1', {cache: true})
+// 不走缓存，因为request.body不同
+httpFetch.post('/users', 'name=2')
+// 不走缓存，因为request.options不同。但该请求会被作为一条新的缓存，超时时间为100000毫秒
+httpFetch.post('/users', 'name=1', {cache: 100000})
+// 只有完全一样的request才会复用缓存
+httpFetch.post('/users', 'name=1', {cache: true})
 ```
 ## 其他方法
 ### jsonToUrlParams (json)
