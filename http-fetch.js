@@ -17,21 +17,22 @@ var resource = {
   fetch: function fetch(request) {
     return (_fetch[request.method] || jsonp)(request.url, request.body);
   },
-  setCache: function setCache(request, requestStr) {
+  setCache: function setCache(request, eigenvalue) {
     var promise = this.fetch(request);
-    this.cache[requestStr] = [promise, new Date()];
+    this.cache[eigenvalue] = [promise, new Date()];
     return promise;
   },
-  getCache: function getCache(requestStr, cacheOption) {
-    var cache = this.cache[requestStr];
+  getCache: function getCache(eigenvalue, cacheOption) {
+    var cache = this.cache[eigenvalue];
     if (cache && (cacheOption === true || new Date() - cache[1] < cacheOption)) return cache[0];
   },
   get: function get(request) {
-    var requestStr = JSON.stringify(request);
     var cacheOption = this.getCacheOption(request.options);
-    if (cacheOption) {
-      var cacheResource = this.getCache(requestStr, cacheOption);
-      return cacheResource ? cacheResource : this.setCache(request, requestStr);
+    // 仅缓存如下三种请求
+    if (cacheOption && ['get', 'head', 'jsonp'].indexOf(request.method) !== -1) {
+      var eigenvalue = 'url=' + request.url + '&method=' + request.method;
+      var cacheResource = this.getCache(eigenvalue, cacheOption);
+      return cacheResource ? cacheResource : this.setCache(request, eigenvalue);
     } else return this.fetch(request);
   }
 };

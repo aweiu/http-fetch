@@ -96,7 +96,7 @@ httpFetch.get('/hello')
   })
 ```
 ### cache
-应用层缓存。默认false
+应用层缓存。默认false（**仅缓存'get', 'head', 'jsonp'这三种请求**）
 ```
 // 同一个请求会从缓存中取，除非刷新了页面。
 httpFetch.cache = true
@@ -154,17 +154,8 @@ httpFetch.loading = {
   cache: true
 }
 ```
-*cache的检测机制是通过request对象特征来决定是否复用*
-```
-// 缓存users接口的get请求
-httpFetch.post('/users', 'name=1', {cache: true})
-// 不走缓存，因为request.body不同
-httpFetch.post('/users', 'name=2')
-// 不走缓存，因为request.options不同。但该请求会被作为一条新的缓存，超时时间为100000毫秒
-httpFetch.post('/users', 'name=1', {cache: 100000})
-// 只有完全一样的request才会复用缓存
-httpFetch.post('/users', 'name=1', {cache: true})
-```
+*cache的检测机制是通过对比request.url和request.method是否相同来决定是否复用*
+
 ## 其他方法
 ### jsonToUrlParams (json)
 用于将json对象转成url参数
