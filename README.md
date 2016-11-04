@@ -43,7 +43,7 @@ httpFetch.onRequest = (request, next) {
   next('不给你请求！')
 }
 ```
-Request对象：
+**Request**对象
 ```
 {
   url: '请求地址',
@@ -73,7 +73,7 @@ httpFetch.onResponse = (response, next) => {
   } else next()
 }
 ```
-**response**对象
+**Response**对象
 ```
 {
   url: '请求地址',
