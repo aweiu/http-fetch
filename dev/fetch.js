@@ -2,18 +2,20 @@
  * Created by aweiu on 16/10/28.
  */
 var httpFetch = {}
+function setOption (option, name, val) {
+  option[name] = option[name] || val
+}
 for (let method of ['get', 'head', 'delete', 'post', 'put', 'patch']) {
-  httpFetch[method] = function (url, body) {
-    return window.fetch(url, {
-      method: method,
-      body: body,
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Cache-Control': 'no-cache',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    })
+  httpFetch[method] = function (url, body, options = {}) {
+    var fetchOptions = JSON.parse(JSON.stringify(options))
+    fetchOptions.method = method
+    fetchOptions.body = body
+    setOption(fetchOptions, 'credentials', 'same-origin')
+    setOption(fetchOptions, 'headers', {})
+    setOption(fetchOptions.headers, 'Cache-Control', 'no-cache')
+    setOption(fetchOptions.headers, 'X-Requested-With', 'XMLHttpRequest')
+    if (!fetchOptions.headers.hasOwnProperty('Content-Type') && typeof data === 'string') fetchOptions.headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    return window.fetch(url, fetchOptions)
       .then(rs => {
         return rs.text()
           .then(text => {

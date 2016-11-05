@@ -116,12 +116,26 @@ httpFetch.loading = {
   }
 }
 ```
+### requestOptions
+[fetch request请求配置](https://developer.mozilla.org/en-US/docs/Web/API/Request)
+```
+// 注意：method和body配置项你无法修改，因为这两项已经默认在你的请求方法中了
+httpFetch.requestOptions = {
+  headers: {
+    // 配置请求头
+  },
+  // 配置跨域模式
+  mode: 'no-cors'
+}
+```
+
 ## 默认行为
 * 所有Response.data||Error.data优先转成json格式
 * 如果**600**毫秒内没有返回数据才会调用loading.show()
 * 'Content-Type': 'application/x-www-form-urlencoded'
 * 'Cache-Control': 'no-cache'
 * 'X-Requested-With': 'XMLHttpRequest'
+* credentials: 'same-origin'
 * jsonp请求的回调参数名为'callback'
 
 ## 请求方法
@@ -151,7 +165,13 @@ httpFetch.loading = {
   // 本次请求是否显示等待提示 默认：true
   loading: true,
   // 本次请求的缓存配置 默认：全局cache配置
-  cache: true
+  cache: true,
+  // 本次请求的fetch request配置 默认：全局requestOptions配置
+  requestOptions: {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  }
 }
 ```
 *cache的检测机制是通过对比request.url和request.method是否相同来决定是否复用*

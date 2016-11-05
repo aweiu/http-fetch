@@ -9,7 +9,7 @@ var resource = {
     return options.hasOwnProperty('cache') ? options.cache : httpFetch.cache;
   },
   fetch (request) {
-    return (fetch[request.method] || jsonp)(request.url, request.body)
+    return (fetch[request.method] || jsonp)(request.url, request.body, request.options.requestOptions || httpFetch.requestOptions)
   },
   setCache (request, eigenvalue) {
     var promise = this.fetch(request)
