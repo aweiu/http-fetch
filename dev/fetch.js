@@ -20,7 +20,7 @@ for (let method of ['get', 'head', 'delete', 'post', 'put', 'patch']) {
         return rs.text()
           .then(text => {
             if (rs.ok) return text
-            var error = Error('httpFetchError:' + rs.statusText || 'unknown error statusText')
+            var error = Error('httpFetchError:' + (rs.statusText || 'Unknown Error StatusText'))
             error.url = url
             error.body = body
             error.method = method

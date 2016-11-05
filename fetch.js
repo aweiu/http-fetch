@@ -25,7 +25,7 @@ var _loop = function _loop() {
     return window.fetch(url, fetchOptions).then(function (rs) {
       return rs.text().then(function (text) {
         if (rs.ok) return text;
-        var error = Error('httpFetchError:' + rs.statusText || 'unknown error statusText');
+        var error = Error('httpFetchError:' + (rs.statusText || 'Unknown Error StatusText'));
         error.url = url;
         error.body = body;
         error.method = method;
