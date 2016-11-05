@@ -35,6 +35,7 @@ var _loop = function _loop() {
         throw error;
       });
     }).catch(function (e) {
+      if (e.type === 'httpFetchError') throw e
       e.message = 'httpFetchError:' + e.message;
       e.url = url;
       e.type = 'httpFetchError';

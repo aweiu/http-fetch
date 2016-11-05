@@ -31,6 +31,7 @@ for (let method of ['get', 'head', 'delete', 'post', 'put', 'patch']) {
           })
       })
       .catch(e => {
+        if (e.type === 'httpFetchError') throw e
         e.message = 'httpFetchError:' + e.message
         e.url = url
         e.type = 'httpFetchError'
