@@ -14,7 +14,7 @@ for (let method of ['get', 'head', 'delete', 'post', 'put', 'patch']) {
     setOption(fetchOptions, 'headers', {})
     setOption(fetchOptions.headers, 'Cache-Control', 'no-cache')
     setOption(fetchOptions.headers, 'X-Requested-With', 'XMLHttpRequest')
-    if (!fetchOptions.headers.hasOwnProperty('Content-Type') && typeof data === 'string') fetchOptions.headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    if (!fetchOptions.headers.hasOwnProperty('Content-Type') && typeof body === 'string') fetchOptions.headers['Content-Type'] = 'application/x-www-form-urlencoded'
     return window.fetch(url, fetchOptions)
       .then(rs => {
         return rs.text()
