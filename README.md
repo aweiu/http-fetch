@@ -188,3 +188,5 @@ console.log(httpFetch.jsonToUrlParams(json))
 // 返回：'name=张三&age=18'
 ```
 
+## 兼容问题
+如果浏览器原生不支持fetch方法，在使用本插件之前，先在您项目的入口文件中引入一次[Fetch Polyfill](https://github.com/github/fetch)即可解决。
