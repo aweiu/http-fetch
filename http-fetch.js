@@ -1,6 +1,7 @@
 /**
  * Created by aweiu on 16/10/28.
  */
+
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -15,7 +16,7 @@ var resource = {
     return options.hasOwnProperty('cache') ? options.cache : httpFetch.cache;
   },
   fetch: function fetch(request) {
-    return (_fetch[request.method] || jsonp)(request.url, request.body, request.options.requestOptions || httpFetch.requestOptions);
+    return request.method === 'jsonp' ? jsonp(request.url) : _fetch(request.url, request.method, request.body, request.options.requestOptions || httpFetch.requestOptions);
   },
   setCache: function setCache(request, eigenvalue) {
     var promise = this.fetch(request);
@@ -90,50 +91,41 @@ function hideLoading(timer) {
     httpFetch.loading.hide();
   }
 }
-var httpFetch = {};
-var methods = ['get', 'head', 'jsonp', 'delete', 'post', 'put', 'patch'];
-var _iteratorNormalCompletion = true;
-var _didIteratorError = false;
-var _iteratorError = undefined;
+function getRequestPromise(url, method, body) {
+  var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
 
-try {
-  var _loop = function _loop() {
-    var method = _step.value;
-
-    httpFetch[method] = function (url, body, options) {
-      if (methods.indexOf(method) < 3) {
-        options = body;
-        body = null;
-      }
-      return new Promise(function (resolve, reject) {
-        request({
-          url: url,
-          body: body,
-          method: method,
-          options: options || {}
-        }, resolve, reject);
-      });
-    };
-  };
-
-  for (var _iterator = methods[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-    _loop();
-  }
-
-} catch (err) {
-  _didIteratorError = true;
-  _iteratorError = err;
-} finally {
-  try {
-    if (!_iteratorNormalCompletion && _iterator.return) {
-      _iterator.return();
-    }
-  } finally {
-    if (_didIteratorError) {
-      throw _iteratorError;
-    }
-  }
+  return new Promise(function (resolve, reject) {
+    request({
+      url: url,
+      body: body,
+      method: method,
+      options: options
+    }, resolve, reject);
+  });
 }
+var httpFetch = {
+  get: function get(url, options) {
+    return getRequestPromise(url, 'get', null, options);
+  },
+  head: function head(url, options) {
+    return getRequestPromise(url, 'head', null, options);
+  },
+  jsonp: function jsonp(url, options) {
+    return getRequestPromise(url, 'jsonp', null, options);
+  },
+  delete: function _delete(url, body, options) {
+    return getRequestPromise(url, 'delete', body, options);
+  },
+  post: function post(url, body, options) {
+    return getRequestPromise(url, 'post', body, options);
+  },
+  put: function put(url, body, options) {
+    return getRequestPromise(url, 'put', body, options);
+  },
+  patch: function patch(url, body, options) {
+    return getRequestPromise(url, 'patch', body, options);
+  }
+};
 /**
  * @param {Object} json
  */

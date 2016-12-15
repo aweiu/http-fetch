@@ -9,7 +9,7 @@ var resource = {
     return options.hasOwnProperty('cache') ? options.cache : httpFetch.cache;
   },
   fetch (request) {
-    return (fetch[request.method] || jsonp)(request.url, request.body, request.options.requestOptions || httpFetch.requestOptions)
+    return request.method === 'jsonp' ? jsonp(request.url) : fetch(request.url, request.method, request.body, request.options.requestOptions || httpFetch.requestOptions)
   },
   setCache (request, eigenvalue) {
     var promise = this.fetch(request)
@@ -29,7 +29,7 @@ var resource = {
       return cacheResource ? cacheResource : this.setCache(request, eigenvalue)
     } else return this.fetch(request)
   }
-};
+}
 function tryToJson (data) {
   try {
     return JSON.parse(data)
@@ -87,23 +87,24 @@ function hideLoading (timer) {
     httpFetch.loading.hide()
   }
 }
-var httpFetch = {}
-const methods = ['get', 'head', 'jsonp', 'delete', 'post', 'put', 'patch']
-for (let method of methods) {
-  httpFetch[method] = function (url, body, options) {
-    if (methods.indexOf(method) < 3) {
-      options = body
-      body = null
-    }
-    return new Promise((resolve, reject) => {
-      request({
-        url: url,
-        body: body,
-        method: method,
-        options: options || {}
-      }, resolve, reject)
-    })
-  }
+function getRequestPromise (url, method, body, options = {}) {
+  return new Promise((resolve, reject) => {
+    request({
+      url: url,
+      body: body,
+      method: method,
+      options: options
+    }, resolve, reject)
+  })
+}
+var httpFetch = {
+  get: (url, options) => getRequestPromise(url, 'get', null, options),
+  head: (url, options) => getRequestPromise(url, 'head', null, options),
+  jsonp: (url, options) => getRequestPromise(url, 'jsonp', null, options),
+  delete: (url, body, options) => getRequestPromise(url, 'delete', body, options),
+  post: (url, body, options) => getRequestPromise(url, 'post', body, options),
+  put: (url, body, options) => getRequestPromise(url, 'put', body, options),
+  patch: (url, body, options) => getRequestPromise(url, 'patch', body, options)
 }
 /**
  * @param {Object} json
