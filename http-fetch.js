@@ -133,8 +133,9 @@ httpFetch.jsonToUrlParams = function (json) {
   var urlParams = '';
   for (var param in json) {
     if (!json.hasOwnProperty(param)) break;
-    var tmp = json[param];
-    urlParams += param + '=' + ((typeof tmp === 'undefined' ? 'undefined' : _typeof(tmp)) === 'object' ? JSON.stringify(tmp) : tmp) + '&';
+    var val = json[param];
+    if ((typeof val === 'undefined' ? 'undefined' : _typeof(val)) === 'object') val = JSON.stringify(val);
+    urlParams += param + '=' + window.encodeURIComponent(val) + '&';
   }
   return urlParams.substr(0, urlParams.length - 1);
 };
