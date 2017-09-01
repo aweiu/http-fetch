@@ -5,7 +5,7 @@ function setOption (option, name, val) {
   option[name] = option[name] || val
 }
 export default function (url, method, body, options = {}) {
-  var fetchOptions = JSON.parse(JSON.stringify(options))
+  const fetchOptions = JSON.parse(JSON.stringify(options))
   fetchOptions.method = method
   fetchOptions.body = body
   setOption(fetchOptions, 'credentials', 'same-origin')
@@ -18,7 +18,7 @@ export default function (url, method, body, options = {}) {
       return rs.text()
         .then(text => {
           if (rs.ok) return text
-          var error = Error('httpFetchError:' + (rs.statusText || 'Unknown Error StatusText'))
+          const error = Error('httpFetchError:' + (rs.statusText || 'Unknown Error StatusText'))
           error.url = url
           error.body = body
           error.method = method

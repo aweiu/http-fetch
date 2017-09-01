@@ -33,10 +33,11 @@ var resource = {
     if (cacheOption && ['get', 'head', 'jsonp'].indexOf(request.method) !== -1) {
       var eigenvalue = 'url=' + request.url + '&method=' + request.method;
       var cacheResource = this.getCache(eigenvalue, cacheOption);
-      return cacheResource ? cacheResource : this.setCache(request, eigenvalue);
+      return cacheResource || this.setCache(request, eigenvalue);
     } else return this.fetch(request);
   }
 };
+
 function tryToJson(data) {
   try {
     return JSON.parse(data);
@@ -44,9 +45,11 @@ function tryToJson(data) {
     return data || {};
   }
 }
+
 function checkOption(options, key) {
   return !options.hasOwnProperty(key) || options[key];
 }
+
 function onResponse(request, responseData, resolve) {
   var response = request;
   response.data = tryToJson(responseData);
@@ -57,17 +60,17 @@ function onResponse(request, responseData, resolve) {
   };
   if (checkOption(request.options, 'hookResponse') && typeof httpFetch.onResponse === 'function') httpFetch.onResponse(response, next);else next();
 }
+
 function request(request, resolve, reject) {
   var next = function next(resolveData) {
+    var loadingData = void 0;
     if (resolveData !== undefined) return resolve(resolveData);
-    if (checkOption(request.options, 'loading')) var loadingTimer = showLoading();
+    if (checkOption(request.options, 'loading')) loadingData = showLoading();
     resource.get(request).then(function (data) {
-      hideLoading(loadingTimer);
-      // 防止误关闭
-      loadingTimer = undefined;
+      hideLoading(loadingData);
       onResponse(request, data, resolve);
     }).catch(function (e) {
-      hideLoading(loadingTimer);
+      hideLoading(loadingData);
       if (e.type !== 'httpFetchError') throw e;
       e.data = tryToJson(e.data);
       if (request.options.errMode === 1 || request.options.errMode === 2) reject(e);
@@ -78,19 +81,27 @@ function request(request, resolve, reject) {
   };
   if (checkOption(request.options, 'hookRequest') && typeof httpFetch.onRequest === 'function') httpFetch.onRequest(request, next);else next();
 }
+
 function showLoading() {
   if (httpFetch.hasOwnProperty('loading') && typeof httpFetch.loading.show === 'function') {
-    return setTimeout(function () {
-      httpFetch.loading.show();
-    }, 600);
+    var data = {
+      timer: setTimeout(function () {
+        data.showed = true;
+        data.showResult = httpFetch.loading.show();
+      }, 600)
+    };
+    return data;
   }
 }
-function hideLoading(timer) {
-  if (timer !== undefined && httpFetch.hasOwnProperty('loading') && typeof httpFetch.loading.hide === 'function') {
-    clearTimeout(timer);
-    httpFetch.loading.hide();
+
+function hideLoading(loadingData) {
+  if (loadingData && loadingData.timer && httpFetch.hasOwnProperty('loading') && typeof httpFetch.loading.hide === 'function') {
+    clearTimeout(loadingData.timer);
+    delete loadingData.timer;
+    if (loadingData.showed) httpFetch.loading.hide(loadingData.showResult);
   }
 }
+
 function getRequestPromise(url, method, body) {
   var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
 
@@ -103,6 +114,7 @@ function getRequestPromise(url, method, body) {
     }, resolve, reject);
   });
 }
+
 var httpFetch = {
   get: function get(url, options) {
     return getRequestPromise(url, 'get', null, options);
@@ -126,6 +138,7 @@ var httpFetch = {
     return getRequestPromise(url, 'patch', body, options);
   }
 };
+
 /**
  * @param {Object} json
  */

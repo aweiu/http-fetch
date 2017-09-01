@@ -110,9 +110,11 @@ httpFetch.cache = 3600000
 httpFetch.loading = {
   show () {
     // 这里写等待提示的显示方法
+    // 您可以return一个数据（通常是您的Toast实例）该数据会被hide方法接收
   },
-  hide () {
+  hide (showResult) {
     // 这里写等待提示的关闭方法
+    // showResult：show方法返回的数据
   }
 }
 ```

@@ -7,11 +7,11 @@ function clear (callback, script) {
 }
 export default function (url) {
   return new Promise((resolve, reject) => {
-    var callback = '_jsonp' + Math.random().toString(36).substr(2)
-    var script = document.createElement('script')
+    const callback = '_jsonp' + Math.random().toString(36).substr(2)
+    const script = document.createElement('script')
     script.src = url + (url.indexOf('?') === -1 ? '?' : '&') + 'callback=' + callback
     script.onerror = () => {
-      var error = Error('httpFetchError: Failed to fetch jsonp')
+      const error = Error('httpFetchError: Failed to fetch jsonp')
       error.url = url
       error.method = 'jsonp'
       error.status = 'unknown'
